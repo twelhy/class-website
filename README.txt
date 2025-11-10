@@ -1,1 +1,1 @@
-23 million - 89 million
+hashcat -m 22000 -a 3 "capp.22000" ?d?d?d?d?d?d?d?d
