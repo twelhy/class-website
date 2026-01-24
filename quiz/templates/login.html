@@ -1,0 +1,6 @@
+<form method="post" style="max-width: 300px; margin: 50px auto; font-family: sans-serif;">
+    {% csrf_token %}
+    <h2>ЖСН арқылы кіру</h2>
+    <input type="text" name="iin" placeholder="12 таңбалы ЖСН" required maxlength="12" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+    <button type="submit" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer;">Кіру</button>
+</form>

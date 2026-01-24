@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card p-4">
+        <h3>Тестілеуге қош келдіңіз, {{ user.full_name }}!</h3>
+        <p>Бейіндік пәндерді таңдаңыз (2 пән):</p>
+        <form action="{% url 'start_test' %}" method="post">
+            {% csrf_token %}
+            <div class="row">
+                {% for subject in subjects %}
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="subjects" value="{{ subject.id }}" id="sub_{{ subject.id }}">
+                        <label class="form-check-label" for="sub_{{ subject.id }}">
+                            {{ subject.name }}
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if error %}
+                <p class="text-danger mt-2">{{ error }}</p>
+            {% endif %}
+            <button type="submit" class="btn btn-primary mt-3">Тестті бастау</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

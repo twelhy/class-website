@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>UBT Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; }
+        .sidebar { height: 100vh; overflow-y: auto; background: white; border-right: 1px solid #ddd; }
+        .q-btn { width: 40px; height: 40px; margin: 3px; font-weight: bold; }
+        .subject-title { background: #0d6efd; color: white; padding: 10px; margin-top: 10px; }
+        .question-card { display: none; } /* Барлық сұрақ жасырын тұрады */
+        .question-card.active { display: block; } /* Тек актив сұрақ көрінеді */
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
