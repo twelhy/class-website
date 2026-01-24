@@ -1,5 +1,11 @@
 from django.contrib import admin
 from .models import Subject, Question, Answer, TestSession
+from .models import StudentAnswer
+
+@admin.register(StudentAnswer)
+class StudentAnswerAdmin(admin.ModelAdmin):
+    list_display = ('session', 'question', 'selected_answer')
+    list_filter = ('session', 'question__subject')
 
 # Сұрақтың астында бірден жауаптарды жазу үшін
 class AnswerInline(admin.TabularInline):

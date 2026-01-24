@@ -1,75 +1,433 @@
-{% extends 'base.html' %}
-{% block content %}
-<form method="post" id="testForm">
-{% csrf_token %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-3 sidebar p-0">
-            <div class="p-3 text-center bg-light border-bottom">
-                <h5>Уақыт: <span id="timer">4:00:00</span></h5>
-                <button type="submit" class="btn btn-danger w-100 mt-2">Аяқтау</button>
+{% load static %}
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест тапсыру</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS айнымалылары - түстерді оңай өзгерту үшін */
+        :root {
+            --primary-color: #006D77; /* Негізгі жасыл/көк түс */
+            --primary-hover: #005860;
+            --bg-color: #F3F4F6;
+            --white: #FFFFFF;
+            --text-dark: #1F2937;
+            --text-gray: #6B7280;
+            --accent-green: #A3E635; /* Прогресс бардағы ашық жасыл */
+            --accent-selected: #CCFBF1; /* Жауап таңдалғандағы фон */
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar (Сол жақ құралдар) --- */
+        .sidebar {
+            width: 70px;
+            background-color: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            border-right: 1px solid #E5E7EB;
+            gap: 20px;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            color: var(--primary-color);
+        }
+
+        .tool-btn:hover {
+            background-color: #EEF2FF;
+        }
+
+        .tool-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Header --- */
+        .header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-area {
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subject-nav {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* --- Progress Bar --- */
+        .progress-container {
+            padding: 20px 30px;
+            background: var(--white);
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .progress-step {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background-color: #E5E7EB;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: var(--text-gray);
+            cursor: default;
+        }
+
+        .progress-step.completed {
+            background-color: var(--accent-green);
+            color: var(--text-dark);
+        }
+
+        .progress-step.current {
+            background-color: var(--primary-color);
+            color: var(--white);
+            font-weight: bold;
+        }
+
+        /* --- Quiz Area --- */
+        .quiz-area {
+            flex: 1;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: var(--white);
+            width: 100%;
+            max-width: 800px;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .answers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .answer-option {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .answer-option:hover {
+            border-color: var(--primary-color);
+            background-color: #F0FDFA;
+        }
+
+        /* Radio input жасыру */
+        .answer-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        /* Жауап нұсқасының әріпі (A, B, C...) */
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            background-color: #F3F4F6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: 600;
+            color: var(--text-gray);
+            transition: 0.2s;
+        }
+
+        /* Таңдалған күй (CSS checked арқылы) */
+        .answer-option input[type="radio"]:checked + .option-content .option-letter {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .answer-option.selected {
+            background-color: #CFEAD1; /* Дизайндағы сұрғылт-жасыл түс */
+            border-color: var(--primary-color);
+        }
+        
+        .answer-option.selected .option-letter {
+             background-color: var(--primary-color);
+             color: var(--white);
+        }
+
+        .option-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .option-text {
+            font-size: 1rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* --- Footer Navigation --- */
+        .footer-nav {
+            background: var(--white);
+            padding: 15px 30px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #E5E7EB;
+            background: var(--white);
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .question-counter {
+            background-color: #E0F2F1;
+            padding: 8px 20px;
+            border-radius: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <button class="tool-btn" onclick="toggleCalculator()" title="Калькулятор">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16" y2="14"></line>
+                <line x1="8" y1="14" x2="8" y2="14"></line>
+                <line x1="12" y1="14" x2="12" y2="14"></line>
+                <line x1="8" y1="18" x2="8" y2="18"></line>
+                <line x1="12" y1="18" x2="12" y2="18"></line>
+                <line x1="16" y1="18" x2="16" y2="18"></line>
+            </svg>
+        </button>
+        <button class="tool-btn" onclick="toggleMendeleev()" title="Периодтық кесте">
+            <span style="font-weight:bold; font-size: 14px; border: 2px solid currentColor; border-radius: 4px; padding: 2px;">Au</span>
+        </button>
+        <button class="tool-btn" onclick="toggleSolubility()" title="Ерігіштік кестесі">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 2v7.31"></path>
+                <path d="M14 2v7.31"></path>
+                <path d="M8.5 2h7"></path>
+                <path d="M14 9.3a6.5 6.5 0 1 1-4 0"></path>
+            </svg>
+        </button>
+        <button class="tool-btn" title="Анықтама">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+        </button>
+    </aside>
+
+    <div class="main-content">
+        <header class="header">
+            <div class="user-info">
+                <div class="logo-area">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" style="height: 30px;">
+                    <span>10 - Ә</span>
+                </div>
+                <span style="font-size: 1.1rem; font-weight: 500;">
+                    {{ request.user.first_name }} {{ request.user.last_name }}
+                </span>
             </div>
             
-            <div class="p-2">
-                {% for subject, questions in all_questions.items %}
-                    <div class="subject-title rounded">{{ subject.name }}</div>
-                    <div class="d-flex flex-wrap justify-content-center">
-                        {% for q in questions %}
-                            <button type="button" class="btn btn-outline-secondary q-btn" 
-                                    onclick="showQuestion('q_{{ q.id }}')">
-                                {{ forloop.counter }}
-                            </button>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
+            <div class="subject-info">
+                <span style="margin-right: 15px; font-weight: 600;">{{ question.subject.name }}</span>
+                <button class="subject-nav">Келесі пән ></button>
             </div>
-        </div>
+        </header>
 
-        <div class="col-md-9 p-5" style="height: 100vh; overflow-y: auto;">
-            {% for subject, questions in all_questions.items %}
-                {% for q in questions %}
-                    <div id="q_{{ q.id }}" class="question-card {% if forloop.first and forloop.parentloop.first %}active{% endif %}">
-                        
-                        <span class="badge bg-info mb-2">{{ subject.name }}</span>
-                        
-                        {% if q.context_text %}
-                            <div class="alert alert-secondary">
-                                <strong>Мәтін:</strong><br>
-                                {{ q.context_text|linebreaks }}
-                            </div>
-                        {% endif %}
-
-                        <h4>{{ q.text|linebreaks }}</h4>
-                        <hr>
-                        
-                        <div class="answers mt-3">
-                            {% for answer in q.answers.all %}
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="radio" 
-                                           name="question_{{ q.id }}" 
-                                           value="{{ answer.id }}" 
-                                           id="ans_{{ answer.id }}">
-                                    <label class="form-check-label fs-5" for="ans_{{ answer.id }}">
-                                        {{ answer.text }}
-                                    </label>
-                                </div>
-                            {% endfor %}
-                        </div>
+        <div class="progress-container">
+            {# Бұл жерде сұрақтар санына қарай цикл жүреді #}
+            {% for i in total_questions_range %}
+                <div class="progress-step 
+                    {% if i < current_index %}completed{% endif %} 
+                    {% if i == current_index %}current{% endif %}">
                     </div>
-                {% endfor %}
             {% endfor %}
         </div>
-    </div>
-</div>
-</form>
 
-<script>
-    // Сұрақтарды ауыстыру функциясы
-    function showQuestion(qId) {
-        // Барлық сұрақтарды жасыру
-        document.querySelectorAll('.question-card').forEach(el => el.classList.remove('active'));
-        // Таңдалған сұрақты көрсету
-        document.getElementById(qId).classList.add('active');
-    }
-</script>
-{% endblock %}
+        <form method="POST" action="" id="quizForm" class="quiz-area">
+            {% csrf_token %}
+            <div class="card">
+                <h2 class="question-text">
+                    {{ question.text }}
+                </h2>
+
+                <div class="answers-list">
+                    {% for answer in answers %}
+                    <label class="answer-option" id="option-{{ answer.id }}">
+                        <input type="radio" name="answer_id" value="{{ answer.id }}" onchange="selectOption(this)">
+                        <div class="option-content">
+                            <span class="option-letter">
+                                {% if forloop.counter == 1 %}A
+                                {% elif forloop.counter == 2 %}B
+                                {% elif forloop.counter == 3 %}C
+                                {% elif forloop.counter == 4 %}D
+                                {% endif %}
+                            </span>
+                            <span class="option-text">{{ answer.text }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <input type="hidden" name="question_id" value="{{ question.id }}">
+        </form>
+
+        <footer class="footer-nav">
+            <button class="btn" onclick="history.back()">&lt; Алдыңғы сұрақ</button>
+            
+            <div class="question-counter">
+                {{ current_index|add:"1" }}-сұрақ
+            </div>
+
+            {% if is_last_question %}
+                <button class="btn btn-primary" onclick="submitForm()">Тестті аяқтау</button>
+            {% else %}
+                <button class="btn btn-primary" onclick="submitForm()">Келесі сұрақ ></button>
+            {% endif %}
+        </footer>
+    </div>
+
+    <script>
+        // Жауапты таңдағанда стильді өзгерту
+        function selectOption(radioInput) {
+            // Барлық опциялардан 'selected' классын алып тастау
+            document.querySelectorAll('.answer-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            // Таңдалған опцияға 'selected' қосу (parent element - label)
+            radioInput.closest('.answer-option').classList.add('selected');
+        }
+
+        // Форманы жіберу
+        function submitForm() {
+            const form = document.getElementById('quizForm');
+            const selected = form.querySelector('input[name="answer_id"]:checked');
+            
+            if (!selected) {
+                alert("Жауапты таңдаңыз!");
+                return;
+            }
+            form.submit();
+        }
+
+        // --- Sidebar Tools Placeholder Functions ---
+        // Бұл функцияларды дайын калькулятор/кесте logic-терімен алмастырасыз
+        function toggleCalculator() {
+            // Мысалы: $('#calculatorModal').modal('show');
+            console.log("Калькулятор ашылуда...");
+            alert("Калькулятор интерфейсі қосылады (Сізде дайын)");
+        }
+
+        function toggleMendeleev() {
+            console.log("Менделеев кестесі ашылуда...");
+            alert("Менделеев кестесі қосылады (Сізде дайын)");
+        }
+
+        function toggleSolubility() {
+            console.log("Ерігіштік кестесі ашылуда...");
+            alert("Ерігіштік кестесі қосылады (Сізде дайын)");
+        }
+    </script>
+</body>
+</html>

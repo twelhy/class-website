@@ -1,6 +1,19 @@
-<form method="post" style="max-width: 300px; margin: 50px auto; font-family: sans-serif;">
+{% load static %}
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #006B79; background: linear-gradient(0deg, rgba(0, 107, 121, 1) 0%, rgba(192, 228, 232, 1) 100%);">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+<form method="post" style="width: 603px; height: 484px; justify-self: center; font-family: sans-serif; background: #FFFFFF; margin: 0; padding: 0; align-items: center; justify-content: center; box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);">
     {% csrf_token %}
-    <h2>ЖСН арқылы кіру</h2>
-    <input type="text" name="iin" placeholder="12 таңбалы ЖСН" required maxlength="12" style="width: 100%; padding: 10px; margin-bottom: 10px;">
-    <button type="submit" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer;">Кіру</button>
+    <img style="margin-left: 244px;" src="{% static 'images/logo.png' %}" alt="" width="115px">
+    <h2 style="margin-left: 231px; color: #006A77; font-size: 36; font-weight: bold; margin-bottom: 11px";>Тіркелу</h2>
+    <p style="margin-left: 121px; color: #515151; font-size: 24px; margin-bottom: 31px;">Тестке кіру үшін ЖСН енгізіңіз</p>
+    <label for="iin" style="margin-left: 41px; font-size: 16px; font-weight: 600;">ЖСН / ИИН</label>
+    <input type="text" name="iin" required maxlength="12" style="font-size: 20px; margin: 0 41px; width: 521px; height: 58px; background: #E9E9E9; margin-bottom: 22px; border: 0;"> <br>
+    <button type="submit" style="margin: 0 41px; width: 521px; height: 58px; padding: 10px; background: #006A78; color: white; font-size: 24px; font-weight: bold; border: none; cursor: pointer; margin-bottom: 18px;">Кіру</button>
+    <p style="margin-left: 71px; color: #515151; font-size: 24px; font-weight: 400;">Тестті бастамас бұрын ЖСН тексеріңіз</p>
 </form>
+</body>

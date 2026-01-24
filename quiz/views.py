@@ -7,7 +7,7 @@ import random
 def home(request):
     # Тек таңдау пәндерін көрсетеміз (Физика, Мат, Гео...)
     selectable_subjects = Subject.objects.filter(is_selectable=True)
-    return render(request, 'home.html', {'subjects': selectable_subjects})
+    return render(request, 'login.html', {'subjects': selectable_subjects})
 
 @login_required
 def start_test(request):
@@ -36,16 +36,46 @@ def start_test(request):
 def test_runner(request, session_id):
     session = get_object_or_404(TestSession, id=session_id, user=request.user)
     
-    # Оқушының нақты сыныбы (мысалы: 10 "Ә")
-    user_grade = request.user.grade 
+    # Сұрақтарды пән бойынша топтау
+    subjects_data = []
+    for subject in session.subjects.all():
+        questions = session.questions.filter(subject=subject)
+        subjects_data.append({
+            'subject': subject,
+            'questions': questions
+        })
 
-    all_questions = {}
-    for subj in session.subjects.all():
-        # Сүзгілеу: Пәні сәйкес және СЫНЫБЫ (10 "Ә") тура сәйкес келетін сұрақтар
-        questions = list(Question.objects.filter(
-            subject=subj, 
-            grade=user_grade
-        ))
-        all_questions[subj] = questions
-    
-    return render(request, 'test_runner.html', {'all_questions': all_questions})
+    # Оқушының бұрын белгілеген жауаптары (reload болғанда сақталу үшін)
+    from .models import StudentAnswer
+    student_answers = StudentAnswer.objects.filter(session=session).values_list('question_id', 'selected_answer_id')
+    ans_dict = dict(student_answers)
+
+    return render(request, 'test_runner.html', {
+        'session': session,
+        'subjects_data': subjects_data,
+        'ans_dict': ans_dict
+    })
+
+import json
+from django.http import JsonResponse
+from .models import StudentAnswer, Question, Answer, TestSession
+
+def save_answer(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        session_id = data.get('session_id')
+        question_id = data.get('question_id')
+        answer_id = data.get('answer_id')
+
+        session = TestSession.objects.get(id=session_id)
+        question = Question.objects.get(id=question_id)
+        answer = Answer.objects.get(id=answer_id)
+
+        # Егер бұл сұраққа бұрын жауап берілсе - жаңартамыз, берілмесе - құрамыз
+        student_ans, created = StudentAnswer.objects.update_or_create(
+            session=session, 
+            question=question,
+            defaults={'selected_answer': answer}
+        )
+
+        return JsonResponse({"status": "success"})
